@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Digital Queue System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @media print {
+            header, nav, #tab-report > div:first-child button, #report-search { display: none !important; }
+            body { background: white; }
+            main { max-width: none; padding: 0; }
+            #tab-report { display: block !important; }
+            #blank-report-card { display: none !important; }
+            body.printing-individual-report #tab-report > :not(#individual-report-card) { display: none !important; }
+            body.printing-individual-report #individual-report-card { display: block !important; box-shadow: none; border: 0; }
+            body.printing-blank-report #tab-report > :not(#blank-report-card) { display: none !important; }
+            body.printing-blank-report #blank-report-card { display: block !important; box-shadow: none; border: 0; }
+            body.printing-blank-report #blank-report-actions { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+    <section id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border p-6 md:p-8">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-hospital-user text-5xl text-blue-600"></i>
+                <h1 class="text-2xl font-bold mt-3">Hospital Digital Queue</h1>
+                <p id="auth-subtitle" class="text-sm text-slate-500 mt-1">Login to continue</p>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="login-email">Email</label>
+                    <input id="login-email" type="email" required autocomplete="email" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="ifadintahirammar@gmail.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="login-password">Password</label>
+                    <input id="login-password" type="password" required autocomplete="current-password" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Password">
+                </div>
+                <p id="login-message" class="text-sm text-red-600"></p>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold">Login</button>
+            </form>
+
+            <form id="register-form" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="register-name">Full Name</label>
+                    <input id="register-name" required autocomplete="name" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Full name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="register-email">Email</label>
+                    <input id="register-email" type="email" required autocomplete="email" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="ifadintahirammar@gmail.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="register-password">Password</label>
+                    <input id="register-password" type="password" minlength="6" required autocomplete="new-password" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Minimum 6 characters">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="register-role">Role</label>
+                    <select id="register-role" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Reception">Reception</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Laboratory">Laboratory</option>
+                        <option value="Administrator">Administrator</option>
+                    </select>
+                </div>
+                <p id="register-message" class="text-sm text-red-600"></p>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold">Register</button>
+            </form>
+
+            <button id="auth-toggle" type="button" class="w-full mt-5 text-blue-700 font-medium">Do not have an account? Register</button>
+        </div>
+    </section>
+
+    <div id="app-screen" class="hidden">
+    <header class="bg-blue-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-hospital-user text-4xl"></i>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold">Hospital Health</h1>
+                    <p class="text-sm text-blue-100">Hospital Digital Queue System</p>
+                </div>
+            </div>
+            <nav class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-2">
+                <button data-tab="reception" class="tab-btn bg-white text-blue-700 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Reception
+                </button>
+                <button data-tab="doctor" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-stethoscope mr-1"></i> Doctor
+                </button>
+                <button data-tab="lab" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-flask mr-1"></i> Laboratory
+                </button>
+                <button data-tab="tv" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-tv mr-1"></i> TV Screen
+                </button>
+                <button data-tab="report" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-file-medical mr-1"></i> Medical Report
+                </button>
+                <button data-tab="admin" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-user-shield mr-1"></i> Admin
+                </button>
+                <button data-tab="appointments" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-calendar-check mr-1"></i> Appointments
+                </button>
+                <button data-tab="pharmacy" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-pills mr-1"></i> Pharmacy
+                </button>
+                <button data-tab="billing" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Billing
+                </button>
+                <button data-tab="patients" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-hospital-user mr-1"></i> Patients
+                </button>
+                <button data-tab="departments" class="tab-btn text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    <i class="fa-solid fa-building mr-1"></i> Departments
+                </button>
+            </nav>
+            <button id="logout-btn" type="button" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold self-end lg:self-auto">
+                <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
+        <section id="tab-reception" class="tab-panel grid lg:grid-cols-3 gap-6">
+            <form id="patient-form" class="bg-white p-6 rounded-xl shadow border border-slate-200 space-y-4">
+                <h2 class="text-xl font-bold text-blue-700"><i class="fa-solid fa-pen-to-square mr-2"></i>Patient Registration</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="patient-name">Full Name</label>
+                    <input id="patient-name" required class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Example: Ifadin Tahir">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1" for="patient-age">Age</label>
+                        <input id="patient-age" type="number" min="0" max="130" required class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1" for="patient-gender">Gender</label>
+                        <select id="patient-gender" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1" for="patient-phone">Phone Number</label>
+                    <input id="patient-phone" type="tel" class="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" placeholder="+251...">
+                </div>
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">
+                    <i class="fa-solid fa-plus mr-2"></i>Register Patient
+                </button>
+            </form>
+
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-blue-700">Waiting Queue</h2>
+                    <span id="waiting-count" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">0</span>
+                </div>
+                <div id="waiting-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <section id="tab-doctor" class="tab-panel hidden grid lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+                <h2 class="text-xl font-bold text-blue-700 mb-4"><i class="fa-solid fa-stethoscope mr-2"></i>Current Patient</h2>
+                <div id="doctor-current" class="min-h-48"></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">Doctor Waiting Queue</h2>
+                <div id="doctor-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <section id="tab-lab" class="tab-panel hidden grid lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+                <h2 class="text-xl font-bold text-blue-700 mb-4"><i class="fa-solid fa-flask mr-2"></i>Lab Patient</h2>
+                <div id="lab-current" class="min-h-48"></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow border border-slate-200">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">Laboratory Queue</h2>
+                <div id="lab-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <section id="tab-tv" class="tab-panel hidden">
+            <div class="bg-slate-900 text-white rounded-2xl p-8 text-center min-h-[420px] flex flex-col justify-center">
+                <p class="text-blue-300 text-xl mb-4">Now Serving</p>
+                <div id="tv-current" class="text-5xl font-bold mb-8">No patient currently</div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 rounded-xl p-5">
+                        <p class="text-slate-300 mb-2">Doctor</p>
+                        <div id="tv-doctor" class="text-3xl font-bold">-</div>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-5">
+                        <p class="text-slate-300 mb-2">Laboratory</p>
+                        <div id="tv-lab" class="text-3xl font-bold">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-report" class="tab-panel hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                <div>
+                    <h2 class="text-2xl font-bold text-blue-700">Medical Report</h2>
+                    <p id="report-date" class="text-sm text-slate-500"></p>
+                </div>
+                <input id="report-search" type="search" class="border rounded-lg px-3 py-2" placeholder="Search reports">
+                <button type="button" onclick="downloadMedicalReportCsv()" class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-bold">
+                    <i class="fa-solid fa-file-csv mr-2"></i> Export CSV
+                </button>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold">
+                    <i class="fa-solid fa-print mr-2"></i> Print Report
+                </button>
+                <button id="blank-report-toggle" type="button" aria-controls="blank-report-card" aria-expanded="false" class="bg-slate-700 hover:bg-slate-800 text-white px-5 py-3 rounded-lg font-bold">
+                    <i class="fa-solid fa-file-lines mr-2"></i> Blank Template
+                </button>
+            </div>
+
+            <div id="individual-report-tools" class="bg-white rounded-xl border p-5 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div class="flex-1">
+                        <label for="patient-report-select" class="block text-sm font-medium mb-1">Individual Patient Report</label>
+                        <select id="patient-report-select" class="w-full border rounded-lg px-3 py-2">
+                            <option value="">Select a patient</option>
+                        </select>
+                    </div>
+                    <button id="patient-report-print" type="button" disabled class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-bold">
+                        <i class="fa-solid fa-print mr-2"></i> Print Patient Report
+                    </button>
+                </div>
+                <p id="patient-report-message" class="text-sm text-slate-500 mt-3">Select a patient to preview their clinical report.</p>
+            </div>
+            <article id="individual-report-card" class="hidden bg-white rounded-xl border p-8 mb-6"></article>
+            <article id="blank-report-card" class="hidden bg-white rounded-xl border p-8 mb-6">
+                <div class="flex items-start justify-between gap-4 border-b pb-5 mb-6">
+                    <div>
+                        <p class="text-sm uppercase tracking-wide text-blue-700 font-semibold">Hospital Health</p>
+                        <h2 class="text-2xl font-bold mt-1">Individual Medical Report</h2>
+                        <p class="text-sm text-slate-500 mt-2">Complete this template with the patient's clinical information.</p>
+                    </div>
+                    <div id="blank-report-actions" class="flex gap-2">
+                        <button id="blank-report-print" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold whitespace-nowrap">
+                            <i class="fa-solid fa-print mr-2"></i> Print Template
+                        </button>
+                    </div>
+                </div>
+                <section class="mb-6">
+                    <h3 class="font-bold text-lg mb-3">Patient Details</h3>
+                    <dl class="grid sm:grid-cols-2 gap-4">
+                        <div><dt class="text-sm text-slate-500">Report Date</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Patient Number</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Full Name</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Age / Gender</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Phone</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Status</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                    </dl>
+                </section>
+                <section class="mb-6">
+                    <h3 class="font-bold text-lg mb-3">Clinical Notes</h3>
+                    <div class="space-y-4">
+                        <div><h4 class="text-sm font-medium mb-1">Symptoms</h4><div class="border rounded-lg min-h-16 p-3"></div></div>
+                        <div><h4 class="text-sm font-medium mb-1">Diagnosis</h4><div class="border rounded-lg min-h-16 p-3"></div></div>
+                        <div><h4 class="text-sm font-medium mb-1">Treatment</h4><div class="border rounded-lg min-h-16 p-3"></div></div>
+                        <div><h4 class="text-sm font-medium mb-1">Prescription</h4><div class="border rounded-lg min-h-16 p-3"></div></div>
+                    </div>
+                </section>
+                <section class="mb-6">
+                    <h3 class="font-bold text-lg mb-3">Laboratory</h3>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div><h4 class="text-sm font-medium mb-1">Request</h4><div class="border rounded-lg min-h-20 p-3"></div></div>
+                        <div><h4 class="text-sm font-medium mb-1">Result</h4><div class="border rounded-lg min-h-20 p-3"></div></div>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg mb-3">Clinician</h3>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div><dt class="text-sm text-slate-500">Name</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                        <div><dt class="text-sm text-slate-500">Signature</dt><dd class="border-b border-slate-400 min-h-8"></dd></div>
+                    </div>
+                </section>
+            </article>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Waiting</p><p id="report-waiting" class="text-3xl font-bold text-yellow-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Doctor</p><p id="report-doctor" class="text-3xl font-bold text-blue-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Laboratory</p><p id="report-lab" class="text-3xl font-bold text-purple-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Completed</p><p id="report-completed" class="text-3xl font-bold text-green-600">0</p></div>
+            </div>
+
+            <div class="bg-white rounded-xl border overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-100 text-slate-700">
+                        <tr>
+                            <th class="p-3">Number</th>
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Age/Gender</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Diagnosis</th>
+                            <th class="p-3">Lab</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="tab-admin" class="tab-panel hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-blue-700">Administration</h2>
+                <p class="text-slate-500">Manage staff accounts and review hospital activity</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Staff accounts</p><p id="admin-staff-count" class="text-3xl font-bold text-blue-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Patients</p><p id="admin-patient-count" class="text-3xl font-bold text-green-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Appointments</p><p id="admin-appointment-count" class="text-3xl font-bold text-purple-600">0</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Departments</p><p id="admin-department-count" class="text-3xl font-bold text-orange-600">0</p></div>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <form id="staff-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                    <h3 id="staff-form-title" class="text-lg font-bold text-blue-700">Add Staff Account</h3>
+                    <input id="staff-edit-email" type="hidden">
+                    <div><label class="block text-sm font-medium mb-1" for="staff-name">Full name</label><input id="staff-name" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="staff-email">Email</label><input id="staff-email" type="email" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="staff-password">Password</label><input id="staff-password" type="password" minlength="6" class="w-full border rounded-lg px-3 py-2" placeholder="Required for new accounts"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="staff-role">Role</label><select id="staff-role" class="w-full border rounded-lg px-3 py-2"><option>Reception</option><option>Doctor</option><option>Laboratory</option><option>Administrator</option></select></div>
+                    <p id="staff-message" class="text-sm text-red-600" role="status"></p>
+                    <div class="flex gap-2"><button id="staff-submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Add Staff</button><button id="staff-cancel" class="hidden border px-4 py-3 rounded-lg" type="button">Cancel</button></div>
+                </form>
+                <div class="lg:col-span-2 bg-white rounded-xl border overflow-x-auto p-5">
+                    <h3 class="text-lg font-bold mb-4">Staff Accounts</h3>
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-100"><tr><th class="p-3">Name</th><th class="p-3">Email</th><th class="p-3">Role</th><th class="p-3">Actions</th></tr></thead>
+                        <tbody id="admin-staff-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-appointments" class="tab-panel hidden grid lg:grid-cols-3 gap-6">
+            <form id="appointment-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                <h2 id="appointment-form-title" class="text-xl font-bold text-blue-700">Schedule Appointment</h2>
+                <input id="appointment-edit-id" type="hidden">
+                <div><label class="block text-sm font-medium mb-1" for="appointment-patient">Patient</label><select id="appointment-patient" required class="w-full border rounded-lg px-3 py-2"></select></div>
+                <div><label class="block text-sm font-medium mb-1" for="appointment-date">Date and time</label><input id="appointment-date" type="datetime-local" required class="w-full border rounded-lg px-3 py-2"></div>
+                <div><label class="block text-sm font-medium mb-1" for="appointment-department">Department</label><select id="appointment-department" required class="w-full border rounded-lg px-3 py-2"></select></div>
+                <div><label class="block text-sm font-medium mb-1" for="appointment-notes">Notes</label><textarea id="appointment-notes" rows="3" class="w-full border rounded-lg px-3 py-2"></textarea></div>
+                <p id="appointment-message" class="text-sm text-red-600" role="status"></p>
+                <div class="flex gap-2"><button id="appointment-submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Add Appointment</button><button id="appointment-cancel-edit" class="hidden border px-4 py-3 rounded-lg" type="button">Cancel</button></div>
+            </form>
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow border overflow-x-auto">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">Appointments</h2>
+                <table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-3">Patient</th><th class="p-3">Date</th><th class="p-3">Department</th><th class="p-3">Status</th><th class="p-3">Actions</th></tr></thead><tbody id="appointment-table"></tbody></table>
+            </div>
+        </section>
+
+        <section id="tab-pharmacy" class="tab-panel hidden space-y-6">
+            <div class="grid lg:grid-cols-3 gap-6">
+                <form id="medicine-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                    <h2 id="medicine-form-title" class="text-xl font-bold text-blue-700">Add Medicine Stock</h2>
+                    <input id="medicine-edit-id" type="hidden">
+                    <div><label class="block text-sm font-medium mb-1" for="medicine-name">Medicine</label><input id="medicine-name" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="medicine-quantity">Quantity</label><input id="medicine-quantity" type="number" min="0" step="1" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="medicine-price">Unit price</label><input id="medicine-price" type="number" min="0" step="0.01" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div class="flex gap-2"><button id="medicine-submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Add Stock</button><button id="medicine-cancel-edit" class="hidden border px-4 py-3 rounded-lg" type="button">Cancel</button></div>
+                </form>
+                <form id="dispense-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                    <h2 class="text-xl font-bold text-blue-700">Dispense Medicine</h2>
+                    <div><label class="block text-sm font-medium mb-1" for="dispense-patient">Patient</label><select id="dispense-patient" required class="w-full border rounded-lg px-3 py-2"></select></div>
+                    <div><label class="block text-sm font-medium mb-1" for="dispense-medicine">Medicine</label><select id="dispense-medicine" required class="w-full border rounded-lg px-3 py-2"></select></div>
+                    <div><label class="block text-sm font-medium mb-1" for="dispense-quantity">Quantity</label><input id="dispense-quantity" type="number" min="1" step="1" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <p id="dispense-message" class="text-sm text-red-600" role="status"></p>
+                    <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold" type="submit">Dispense and Add to Bill</button>
+                </form>
+                <div class="bg-white p-6 rounded-xl shadow border">
+                    <h2 class="text-xl font-bold text-blue-700 mb-3">Inventory Summary</h2>
+                    <p class="text-slate-500">Medicines</p><p id="pharmacy-item-count" class="text-3xl font-bold">0</p>
+                    <p class="mt-4 text-slate-500">Units in stock</p><p id="pharmacy-units-count" class="text-3xl font-bold">0</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow border overflow-x-auto">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">Pharmacy Inventory</h2>
+                <table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-3">Medicine</th><th class="p-3">Quantity</th><th class="p-3">Unit price</th><th class="p-3">Actions</th></tr></thead><tbody id="medicine-table"></tbody></table>
+            </div>
+        </section>
+
+        <section id="tab-billing" class="tab-panel hidden space-y-6">
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Total billed</p><p id="billing-total" class="text-2xl font-bold">0.00</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Paid</p><p id="billing-paid" class="text-2xl font-bold text-green-700">0.00</p></div>
+                <div class="bg-white rounded-xl border p-5"><p class="text-slate-500">Outstanding</p><p id="billing-outstanding" class="text-2xl font-bold text-red-700">0.00</p></div>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <form id="bill-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                    <h2 class="text-xl font-bold text-blue-700">Create Bill</h2>
+                    <div><label class="block text-sm font-medium mb-1" for="bill-patient">Patient</label><select id="bill-patient" required class="w-full border rounded-lg px-3 py-2"></select></div>
+                    <div><label class="block text-sm font-medium mb-1" for="bill-description">Service</label><input id="bill-description" required class="w-full border rounded-lg px-3 py-2" placeholder="Consultation, test, etc."></div>
+                    <div><label class="block text-sm font-medium mb-1" for="bill-amount">Amount</label><input id="bill-amount" type="number" min="0.01" step="0.01" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Create Bill</button>
+                </form>
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow border overflow-x-auto">
+                    <h2 class="text-xl font-bold text-blue-700 mb-4">Billing Records</h2>
+                    <table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-3">Patient</th><th class="p-3">Service</th><th class="p-3">Amount</th><th class="p-3">Status</th><th class="p-3">Actions</th></tr></thead><tbody id="bill-table"></tbody></table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-patients" class="tab-panel hidden grid lg:grid-cols-3 gap-6">
+            <form id="patient-edit-form" class="hidden bg-white p-6 rounded-xl shadow border space-y-4">
+                <h2 class="text-xl font-bold text-blue-700">Edit Patient</h2>
+                <input id="patient-edit-id" type="hidden">
+                <div><label class="block text-sm font-medium mb-1" for="patient-edit-name">Full name</label><input id="patient-edit-name" required class="w-full border rounded-lg px-3 py-2"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-sm font-medium mb-1" for="patient-edit-age">Age</label><input id="patient-edit-age" type="number" min="0" max="130" required class="w-full border rounded-lg px-3 py-2"></div>
+                    <div><label class="block text-sm font-medium mb-1" for="patient-edit-gender">Gender</label><select id="patient-edit-gender" class="w-full border rounded-lg px-3 py-2"><option>Male</option><option>Female</option></select></div>
+                </div>
+                <div><label class="block text-sm font-medium mb-1" for="patient-edit-phone">Phone</label><input id="patient-edit-phone" type="tel" class="w-full border rounded-lg px-3 py-2"></div>
+                <div class="flex gap-2"><button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Save Patient</button><button id="patient-edit-cancel" class="border px-4 py-3 rounded-lg" type="button">Cancel</button></div>
+                <p id="patient-edit-message" class="text-sm text-red-600" role="status"></p>
+            </form>
+            <div id="patient-directory-panel" class="lg:col-span-3 bg-white p-6 rounded-xl shadow border overflow-x-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div><h2 class="text-2xl font-bold text-blue-700">Patient Directory</h2><p class="text-slate-500">Registered patient records</p></div>
+                    <input id="patient-search" type="search" class="border rounded-lg px-3 py-2" placeholder="Search name or number">
+                </div>
+                <table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-3">Number</th><th class="p-3">Name</th><th class="p-3">Age/Gender</th><th class="p-3">Phone</th><th class="p-3">Status</th><th class="p-3">Action</th></tr></thead><tbody id="patient-directory-table"></tbody></table>
+            </div>
+        </section>
+
+        <section id="tab-departments" class="tab-panel hidden grid lg:grid-cols-3 gap-6">
+            <form id="department-form" class="bg-white p-6 rounded-xl shadow border space-y-4">
+                <h2 id="department-form-title" class="text-xl font-bold text-blue-700">Add Department</h2>
+                <input id="department-edit-index" type="hidden">
+                <div><label class="block text-sm font-medium mb-1" for="department-name">Department name</label><input id="department-name" required class="w-full border rounded-lg px-3 py-2"></div>
+                <p id="department-message" class="text-sm text-red-600" role="status"></p>
+                <div class="flex gap-2"><button id="department-submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold" type="submit">Add Department</button><button id="department-cancel-edit" class="hidden border px-4 py-3 rounded-lg" type="button">Cancel</button></div>
+            </form>
+            <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow border overflow-x-auto">
+                <h2 class="text-xl font-bold text-blue-700 mb-4">Departments</h2>
+                <table class="w-full text-left"><thead class="bg-slate-100"><tr><th class="p-3">Department</th><th class="p-3">Appointments</th><th class="p-3">Actions</th></tr></thead><tbody id="department-table"></tbody></table>
+            </div>
+        </section>
+    </main>
+    </div>
+
+    <script>
+        const AUTH_ACCOUNTS_KEY = "hospitalAccounts";
+        const AUTH_SESSION_KEY = "hospitalCurrentUser";
+        let accounts = JSON.parse(localStorage.getItem(AUTH_ACCOUNTS_KEY) || "[]");
+
+        function openApp() {
+            document.getElementById("auth-screen").classList.add("hidden");
+            document.getElementById("app-screen").classList.remove("hidden");
+        }
+
+        function openAuth() {
+            document.getElementById("app-screen").classList.add("hidden");
+            document.getElementById("auth-screen").classList.remove("hidden");
+        }
+
+        document.getElementById("auth-toggle").addEventListener("click", function () {
+            const loginForm = document.getElementById("login-form");
+            const registerForm = document.getElementById("register-form");
+            const registering = registerForm.classList.contains("hidden");
+            loginForm.classList.toggle("hidden", registering);
+            registerForm.classList.toggle("hidden", !registering);
+            document.getElementById("auth-subtitle").textContent = registering ? "Create a hospital account" : "Login to continue";
+            this.textContent = registering ? "Already have an account? Login" : "Do not have an account? Register";
+        });
+
+        document.getElementById("register-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const name = document.getElementById("register-name").value.trim();
+            const email = document.getElementById("register-email").value.trim().toLowerCase();
+            const password = document.getElementById("register-password").value;
+            const role = document.getElementById("register-role").value;
+            const message = document.getElementById("register-message");
+
+            if (accounts.some(account => account.email === email)) {
+                message.textContent = "This email is already registered.";
+                return;
+            }
+
+            accounts.push({ name, email, password, role });
+            localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+            localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ name, email, role }));
+            event.target.reset();
+            message.textContent = "";
+            openApp();
+            render();
+        });
+
+        document.getElementById("login-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const email = document.getElementById("login-email").value.trim().toLowerCase();
+            const password = document.getElementById("login-password").value;
+            const message = document.getElementById("login-message");
+            const account = accounts.find(item => item.email === email && item.password === password);
+
+            if (!account) {
+                message.textContent = "Invalid email or password.";
+                return;
+            }
+
+            localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+                name: account.name,
+                email: account.email,
+                role: account.role
+            }));
+            message.textContent = "";
+            openApp();
+            render();
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", function () {
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            openAuth();
+        });
+
+        if (localStorage.getItem(AUTH_SESSION_KEY)) {
+            openApp();
+        } else {
+            openAuth();
+        }
+
+        const STORAGE_KEY = "hospitalQueuePatients";
+        let patients = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        let nextNumber = Math.max(0, ...patients.map(p => p.number)) + 1;
+        const DEPARTMENTS_KEY = "hospitalDepartments";
+        const APPOINTMENTS_KEY = "hospitalAppointments";
+        const MEDICINES_KEY = "hospitalMedicines";
+        const BILLS_KEY = "hospitalBills";
+        let departments = JSON.parse(localStorage.getItem(DEPARTMENTS_KEY) || '["General Medicine","Pediatrics","Surgery","Cardiology"]');
+        let appointments = JSON.parse(localStorage.getItem(APPOINTMENTS_KEY) || "[]");
+        let medicines = JSON.parse(localStorage.getItem(MEDICINES_KEY) || "[]");
+        let bills = JSON.parse(localStorage.getItem(BILLS_KEY) || "[]");
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
+            render();
+        }
+
+        function persistModuleData() {
+            localStorage.setItem(DEPARTMENTS_KEY, JSON.stringify(departments));
+            localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
+            localStorage.setItem(MEDICINES_KEY, JSON.stringify(medicines));
+            localStorage.setItem(BILLS_KEY, JSON.stringify(bills));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
+            render();
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+            }[char]));
+        }
+
+        function createId() {
+            return Date.now().toString() + Math.random().toString(36).slice(2, 8);
+        }
+
+        function formatAmount(value) {
+            return Number(value || 0).toFixed(2);
+        }
+
+        function patientName(record) {
+            const patient = patients.find(item => item.id === record.patientId);
+            return patient ? patient.name : record.patient || "Unknown patient";
+        }
+
+        function setSelectOptions(select, options, selectedValue, emptyLabel) {
+            select.innerHTML = `<option value="">${escapeHtml(emptyLabel)}</option>` + options.map(option =>
+                `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
+            ).join("");
+            if (options.some(option => String(option.value) === String(selectedValue))) {
+                select.value = selectedValue;
+            }
+        }
+
+        function saveAccounts() {
+            localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(accounts));
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
+            document.getElementById("tab-" + tabName).classList.remove("hidden");
+            document.querySelectorAll(".tab-btn").forEach(button => {
+                button.classList.remove("bg-white", "text-blue-700", "shadow");
+                button.classList.add("text-white");
+            });
+            const active = document.querySelector('[data-tab="' + tabName + '"]');
+            active.classList.add("bg-white", "text-blue-700", "shadow");
+            active.classList.remove("text-white");
+        }
+
+        document.querySelectorAll(".tab-btn").forEach(button => {
+            button.addEventListener("click", () => switchTab(button.dataset.tab));
+        });
+
+        function resetStaffForm() {
+            document.getElementById("staff-form").reset();
+            document.getElementById("staff-edit-email").value = "";
+            document.getElementById("staff-password").required = true;
+            document.getElementById("staff-password").placeholder = "Required for new accounts";
+            document.getElementById("staff-form-title").textContent = "Add Staff Account";
+            document.getElementById("staff-submit").textContent = "Add Staff";
+            document.getElementById("staff-cancel").classList.add("hidden");
+            document.getElementById("staff-message").textContent = "";
+        }
+
+        document.getElementById("staff-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const oldEmail = document.getElementById("staff-edit-email").value;
+            const name = document.getElementById("staff-name").value.trim();
+            const email = document.getElementById("staff-email").value.trim().toLowerCase();
+            const password = document.getElementById("staff-password").value;
+            const role = document.getElementById("staff-role").value;
+            const existing = accounts.find(account => account.email.toLowerCase() === oldEmail.toLowerCase());
+            const duplicate = accounts.some(account => account.email.toLowerCase() === email && account !== existing);
+            const message = document.getElementById("staff-message");
+
+            if (duplicate) {
+                message.textContent = "This email is already in use.";
+                return;
+            }
+            if (!existing && password.length < 6) {
+                message.textContent = "Password must contain at least 6 characters.";
+                return;
+            }
+
+            if (existing) {
+                existing.name = name;
+                existing.email = email;
+                existing.role = role;
+                if (password) existing.password = password;
+                const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+                if (session && session.email.toLowerCase() === oldEmail.toLowerCase()) {
+                    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ name, email, role }));
+                }
+            } else {
+                accounts.push({ name, email, password, role });
+            }
+            saveAccounts();
+            resetStaffForm();
+            render();
+        });
+
+        document.getElementById("staff-cancel").addEventListener("click", resetStaffForm);
+        document.getElementById("admin-staff-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const account = accounts.find(item => item.email === button.dataset.email);
+            if (!account) return;
+            if (button.dataset.action === "edit-staff") {
+                document.getElementById("staff-edit-email").value = account.email;
+                document.getElementById("staff-name").value = account.name;
+                document.getElementById("staff-email").value = account.email;
+                document.getElementById("staff-role").value = account.role;
+                document.getElementById("staff-password").value = "";
+                document.getElementById("staff-password").required = false;
+                document.getElementById("staff-password").placeholder = "Leave blank to keep current password";
+                document.getElementById("staff-form-title").textContent = "Edit Staff Account";
+                document.getElementById("staff-submit").textContent = "Save Staff";
+                document.getElementById("staff-cancel").classList.remove("hidden");
+            } else if (button.dataset.action === "delete-staff") {
+                const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+                if (session && session.email.toLowerCase() === account.email.toLowerCase()) return;
+                if (!window.confirm(`Remove staff account for ${account.name}?`)) return;
+                accounts = accounts.filter(item => item !== account);
+                saveAccounts();
+                resetStaffForm();
+                render();
+            }
+        });
+
+        document.getElementById("admin-staff-table").addEventListener("change", event => {
+            const select = event.target.closest("select[data-email]");
+            if (!select) return;
+            const account = accounts.find(item => item.email === select.dataset.email);
+            if (!account) return;
+            account.role = select.value;
+            saveAccounts();
+            const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+            if (session && session.email.toLowerCase() === account.email.toLowerCase()) {
+                session.role = account.role;
+                localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+            }
+        });
+
+        function resetAppointmentForm() {
+            document.getElementById("appointment-form").reset();
+            document.getElementById("appointment-edit-id").value = "";
+            document.getElementById("appointment-form-title").textContent = "Schedule Appointment";
+            document.getElementById("appointment-submit").textContent = "Add Appointment";
+            document.getElementById("appointment-cancel-edit").classList.add("hidden");
+            document.getElementById("appointment-message").textContent = "";
+        }
+
+        document.getElementById("appointment-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const patientId = document.getElementById("appointment-patient").value;
+            const patient = patients.find(item => item.id === patientId);
+            const department = document.getElementById("appointment-department").value;
+            if (!patient || !department) {
+                document.getElementById("appointment-message").textContent = "Register a patient and department before scheduling.";
+                return;
+            }
+            const values = {
+                patientId,
+                patient: patient.name,
+                date: document.getElementById("appointment-date").value,
+                department,
+                notes: document.getElementById("appointment-notes").value.trim()
+            };
+            const editId = document.getElementById("appointment-edit-id").value;
+            const appointment = appointments.find(item => item.id === editId);
+            if (appointment) Object.assign(appointment, values);
+            else appointments.push({ id: createId(), ...values, status: "Scheduled" });
+            resetAppointmentForm();
+            persistModuleData();
+        });
+
+        document.getElementById("appointment-cancel-edit").addEventListener("click", resetAppointmentForm);
+        document.getElementById("appointment-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const appointment = appointments.find(item => item.id === button.dataset.id);
+            if (!appointment) return;
+            if (button.dataset.action === "edit-appointment") {
+                document.getElementById("appointment-edit-id").value = appointment.id;
+                document.getElementById("appointment-patient").value = appointment.patientId || "";
+                document.getElementById("appointment-date").value = appointment.date;
+                document.getElementById("appointment-department").value = appointment.department;
+                document.getElementById("appointment-notes").value = appointment.notes || "";
+                document.getElementById("appointment-form-title").textContent = "Edit Appointment";
+                document.getElementById("appointment-submit").textContent = "Save Appointment";
+                document.getElementById("appointment-cancel-edit").classList.remove("hidden");
+            } else if (button.dataset.action === "complete-appointment" || button.dataset.action === "cancel-appointment") {
+                appointment.status = button.dataset.action === "complete-appointment" ? "Completed" : "Cancelled";
+                persistModuleData();
+            } else if (button.dataset.action === "delete-appointment") {
+                if (!window.confirm("Delete this appointment record?")) return;
+                appointments = appointments.filter(item => item !== appointment);
+                persistModuleData();
+            }
+        });
+
+        function resetMedicineForm() {
+            document.getElementById("medicine-form").reset();
+            document.getElementById("medicine-edit-id").value = "";
+            document.getElementById("medicine-form-title").textContent = "Add Medicine Stock";
+            document.getElementById("medicine-submit").textContent = "Add Stock";
+            document.getElementById("medicine-cancel-edit").classList.add("hidden");
+        }
+
+        document.getElementById("medicine-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const editId = document.getElementById("medicine-edit-id").value;
+            const name = document.getElementById("medicine-name").value.trim();
+            const quantity = Number(document.getElementById("medicine-quantity").value);
+            const price = Number(document.getElementById("medicine-price").value);
+            const medicine = medicines.find(item => item.id === editId);
+            if (medicine) {
+                Object.assign(medicine, { name, quantity, price });
+            } else {
+                const existing = medicines.find(item => item.name.toLowerCase() === name.toLowerCase());
+                if (existing) {
+                    existing.quantity += quantity;
+                    existing.price = price;
+                } else {
+                    medicines.push({ id: createId(), name, quantity, price });
+                }
+            }
+            resetMedicineForm();
+            persistModuleData();
+        });
+
+        document.getElementById("medicine-cancel-edit").addEventListener("click", resetMedicineForm);
+        document.getElementById("medicine-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const medicine = medicines.find(item => item.id === button.dataset.id);
+            if (!medicine) return;
+            if (button.dataset.action === "edit-medicine") {
+                document.getElementById("medicine-edit-id").value = medicine.id;
+                document.getElementById("medicine-name").value = medicine.name;
+                document.getElementById("medicine-quantity").value = medicine.quantity;
+                document.getElementById("medicine-price").value = medicine.price;
+                document.getElementById("medicine-form-title").textContent = "Edit Medicine";
+                document.getElementById("medicine-submit").textContent = "Save Medicine";
+                document.getElementById("medicine-cancel-edit").classList.remove("hidden");
+            } else if (button.dataset.action === "delete-medicine") {
+                if (!window.confirm(`Remove ${medicine.name} from inventory?`)) return;
+                medicines = medicines.filter(item => item !== medicine);
+                resetMedicineForm();
+                persistModuleData();
+            }
+        });
+
+        document.getElementById("dispense-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const patient = patients.find(item => item.id === document.getElementById("dispense-patient").value);
+            const medicine = medicines.find(item => item.id === document.getElementById("dispense-medicine").value);
+            const quantity = Number(document.getElementById("dispense-quantity").value);
+            const message = document.getElementById("dispense-message");
+            if (!patient || !medicine) {
+                message.textContent = "Register a patient and add medicine stock before dispensing.";
+                return;
+            }
+            if (!Number.isInteger(quantity) || quantity < 1 || quantity > medicine.quantity) {
+                message.textContent = `Enter a quantity from 1 to ${medicine.quantity}.`;
+                return;
+            }
+            medicine.quantity -= quantity;
+            bills.push({
+                id: createId(),
+                patientId: patient.id,
+                patient: patient.name,
+                description: `${medicine.name} x ${quantity}`,
+                amount: medicine.price * quantity,
+                paid: false
+            });
+            event.target.reset();
+            message.textContent = "";
+            persistModuleData();
+        });
+
+        document.getElementById("bill-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const patient = patients.find(item => item.id === document.getElementById("bill-patient").value);
+            if (!patient) return;
+            bills.push({
+                id: createId(),
+                patientId: patient.id,
+                patient: patient.name,
+                description: document.getElementById("bill-description").value.trim(),
+                amount: Number(document.getElementById("bill-amount").value),
+                paid: false
+            });
+            event.target.reset();
+            persistModuleData();
+        });
+
+        document.getElementById("bill-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const bill = bills.find(item => item.id === button.dataset.id);
+            if (!bill) return;
+            if (button.dataset.action === "toggle-bill") {
+                bill.paid = !bill.paid;
+            } else if (button.dataset.action === "delete-bill") {
+                if (!window.confirm("Delete this billing record?")) return;
+                bills = bills.filter(item => item !== bill);
+            }
+            persistModuleData();
+        });
+
+        function resetDepartmentForm() {
+            document.getElementById("department-form").reset();
+            document.getElementById("department-edit-index").value = "";
+            document.getElementById("department-form-title").textContent = "Add Department";
+            document.getElementById("department-submit").textContent = "Add Department";
+            document.getElementById("department-cancel-edit").classList.add("hidden");
+            document.getElementById("department-message").textContent = "";
+        }
+
+        document.getElementById("department-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const name = document.getElementById("department-name").value.trim();
+            const editIndex = document.getElementById("department-edit-index").value;
+            const duplicate = departments.some((department, index) =>
+                department.toLowerCase() === name.toLowerCase() && String(index) !== editIndex
+            );
+            if (duplicate) {
+                document.getElementById("department-message").textContent = "This department already exists.";
+                return;
+            }
+            if (editIndex !== "") {
+                const oldName = departments[Number(editIndex)];
+                departments[Number(editIndex)] = name;
+                appointments.forEach(appointment => {
+                    if (appointment.department === oldName) appointment.department = name;
+                });
+            } else {
+                departments.push(name);
+            }
+            resetDepartmentForm();
+            persistModuleData();
+        });
+        document.getElementById("department-cancel-edit").addEventListener("click", resetDepartmentForm);
+        document.getElementById("department-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const index = Number(button.dataset.index);
+            const department = departments[index];
+            if (!department) return;
+            if (button.dataset.action === "edit-department") {
+                document.getElementById("department-edit-index").value = index;
+                document.getElementById("department-name").value = department;
+                document.getElementById("department-form-title").textContent = "Edit Department";
+                document.getElementById("department-submit").textContent = "Save Department";
+                document.getElementById("department-cancel-edit").classList.remove("hidden");
+            } else if (button.dataset.action === "delete-department") {
+                if (appointments.some(appointment => appointment.department === department)) {
+                    document.getElementById("department-message").textContent = "This department has appointment records and cannot be removed.";
+                    return;
+                }
+                if (!window.confirm(`Remove ${department}?`)) return;
+                departments.splice(index, 1);
+                resetDepartmentForm();
+                persistModuleData();
+            }
+        });
+
+        document.getElementById("patient-search").addEventListener("input", renderPatientDirectory);
+        document.getElementById("report-search").addEventListener("input", renderMedicalReport);
+        document.getElementById("blank-report-toggle").addEventListener("click", event => {
+            const report = document.getElementById("blank-report-card");
+            const isVisible = report.classList.toggle("hidden") === false;
+            event.currentTarget.setAttribute("aria-expanded", String(isVisible));
+            event.currentTarget.innerHTML = isVisible
+                ? '<i class="fa-solid fa-eye-slash mr-2"></i> Hide Template'
+                : '<i class="fa-solid fa-file-lines mr-2"></i> Blank Template';
+        });
+        document.getElementById("blank-report-print").addEventListener("click", () => {
+            document.body.classList.add("printing-blank-report");
+            window.addEventListener("afterprint", () => {
+                document.body.classList.remove("printing-blank-report");
+            }, { once: true });
+            window.print();
+        });
+        document.getElementById("patient-report-select").addEventListener("change", renderIndividualMedicalReport);
+        document.getElementById("patient-report-print").addEventListener("click", () => {
+            const select = document.getElementById("patient-report-select");
+            if (!select.value) {
+                document.getElementById("patient-report-message").textContent = "Select a patient before printing.";
+                return;
+            }
+            renderIndividualMedicalReport();
+            document.body.classList.add("printing-individual-report");
+            window.addEventListener("afterprint", () => {
+                document.body.classList.remove("printing-individual-report");
+            }, { once: true });
+            window.print();
+        });
+        document.getElementById("patient-edit-cancel").addEventListener("click", () => {
+            document.getElementById("patient-edit-form").reset();
+            document.getElementById("patient-edit-id").value = "";
+            document.getElementById("patient-edit-form").classList.add("hidden");
+            document.getElementById("patient-directory-panel").classList.remove("lg:col-span-2");
+            document.getElementById("patient-directory-panel").classList.add("lg:col-span-3");
+        });
+        document.getElementById("patient-edit-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const patient = patients.find(item => item.id === document.getElementById("patient-edit-id").value);
+            if (!patient) return;
+            patient.name = document.getElementById("patient-edit-name").value.trim();
+            patient.age = document.getElementById("patient-edit-age").value;
+            patient.gender = document.getElementById("patient-edit-gender").value;
+            patient.phone = document.getElementById("patient-edit-phone").value.trim();
+            document.getElementById("patient-edit-form").reset();
+            document.getElementById("patient-edit-id").value = "";
+            document.getElementById("patient-edit-form").classList.add("hidden");
+            document.getElementById("patient-directory-panel").classList.remove("lg:col-span-2");
+            document.getElementById("patient-directory-panel").classList.add("lg:col-span-3");
+            save();
+        });
+        document.getElementById("patient-directory-table").addEventListener("click", event => {
+            const button = event.target.closest("button[data-action='edit-patient']");
+            if (!button) return;
+            const patient = patients.find(item => item.id === button.dataset.id);
+            if (!patient) return;
+            document.getElementById("patient-edit-id").value = patient.id;
+            document.getElementById("patient-edit-name").value = patient.name;
+            document.getElementById("patient-edit-age").value = patient.age;
+            document.getElementById("patient-edit-gender").value = patient.gender;
+            document.getElementById("patient-edit-phone").value = patient.phone || "";
+            document.getElementById("patient-edit-form").classList.remove("hidden");
+            document.getElementById("patient-directory-panel").classList.remove("lg:col-span-3");
+            document.getElementById("patient-directory-panel").classList.add("lg:col-span-2");
+        });
+
+        function renderPatientDirectory() {
+            const query = document.getElementById("patient-search").value.trim().toLowerCase();
+            const matchingPatients = patients.filter(patient =>
+                patient.name.toLowerCase().includes(query) ||
+                String(patient.number).includes(query) ||
+                String(patient.phone || "").toLowerCase().includes(query)
+            );
+            document.getElementById("patient-directory-table").innerHTML = matchingPatients.length
+                ? matchingPatients.map(patient => `
+                    <tr class="border-t">
+                        <td class="p-3 font-bold">${String(patient.number).padStart(3, "0")}</td>
+                        <td class="p-3">${escapeHtml(patient.name)}</td>
+                        <td class="p-3">${escapeHtml(patient.age)} / ${escapeHtml(patient.gender)}</td>
+                        <td class="p-3">${escapeHtml(patient.phone || "-")}</td>
+                        <td class="p-3">${escapeHtml(patient.status)}</td>
+                        <td class="p-3"><button data-action="edit-patient" data-id="${escapeHtml(patient.id)}" class="text-blue-700 hover:underline">Edit</button></td>
+                    </tr>`).join("")
+                : '<tr><td colspan="6" class="p-6 text-center text-slate-500">No matching patients.</td></tr>';
+        }
+
+        function getMatchingMedicalReportPatients() {
+            const query = document.getElementById("report-search").value.trim().toLowerCase();
+            return patients.filter(patient =>
+                String(patient.name || "").toLowerCase().includes(query) ||
+                String(patient.number).includes(query) ||
+                String(patient.symptoms || "").toLowerCase().includes(query) ||
+                String(patient.diagnosis || "").toLowerCase().includes(query) ||
+                String(patient.treatment || "").toLowerCase().includes(query) ||
+                String(patient.prescription || "").toLowerCase().includes(query) ||
+                String(patient.labRequest || "").toLowerCase().includes(query) ||
+                String(patient.labResult || "").toLowerCase().includes(query)
+            );
+        }
+
+        function getMedicalReportStatus(patient) {
+            const statusLabels = { waiting: "Waiting", doctor: "Doctor", lab: "Laboratory", completed: "Completed" };
+            return statusLabels[patient.status] || String(patient.status || "");
+        }
+
+        function renderIndividualMedicalReport() {
+            const select = document.getElementById("patient-report-select");
+            const selectedPatientId = select.value;
+            select.innerHTML = '<option value="">Select a patient</option>' + patients.map(patient =>
+                `<option value="${escapeHtml(patient.id)}">${String(patient.number).padStart(3, "0")} - ${escapeHtml(patient.name)}</option>`
+            ).join("");
+            select.value = patients.some(patient => String(patient.id) === selectedPatientId) ? selectedPatientId : "";
+
+            const patient = patients.find(item => String(item.id) === select.value);
+            const printButton = document.getElementById("patient-report-print");
+            const message = document.getElementById("patient-report-message");
+            const report = document.getElementById("individual-report-card");
+            printButton.disabled = !patient;
+            if (!patient) {
+                message.textContent = patients.length
+                    ? "Select a patient to preview their clinical report."
+                    : "No patient records are available for a clinical report.";
+                report.classList.add("hidden");
+                report.innerHTML = "";
+                return;
+            }
+
+            message.textContent = "";
+            report.classList.remove("hidden");
+            report.innerHTML = `
+                <div class="border-b pb-5 mb-6">
+                    <p class="text-sm uppercase tracking-wide text-blue-700 font-semibold">Hospital Health</p>
+                    <h2 class="text-2xl font-bold mt-1">Individual Medical Report</h2>
+                    <p class="text-sm text-slate-500 mt-2">Generated ${escapeHtml(new Date().toLocaleString())}</p>
+                </div>
+                <section class="mb-6">
+                    <h3 class="font-bold text-lg mb-3">Patient Details</h3>
+                    <dl class="grid sm:grid-cols-2 gap-3">
+                        <div><dt class="text-sm text-slate-500">Patient Number</dt><dd class="font-medium">${String(patient.number).padStart(3, "0")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Full Name</dt><dd class="font-medium">${escapeHtml(patient.name)}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Age</dt><dd class="font-medium">${escapeHtml(patient.age || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Gender</dt><dd class="font-medium">${escapeHtml(patient.gender || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Phone</dt><dd class="font-medium">${escapeHtml(patient.phone || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Status</dt><dd class="font-medium">${escapeHtml(getMedicalReportStatus(patient))}</dd></div>
+                    </dl>
+                </section>
+                <section class="mb-6">
+                    <h3 class="font-bold text-lg mb-3">Clinical Notes</h3>
+                    <dl class="grid sm:grid-cols-2 gap-3">
+                        <div><dt class="text-sm text-slate-500">Symptoms</dt><dd class="border rounded-lg p-3 min-h-16 whitespace-pre-wrap">${escapeHtml(patient.symptoms || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Diagnosis</dt><dd class="border rounded-lg p-3 min-h-16 whitespace-pre-wrap">${escapeHtml(patient.diagnosis || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Treatment</dt><dd class="border rounded-lg p-3 min-h-16 whitespace-pre-wrap">${escapeHtml(patient.treatment || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Prescription</dt><dd class="border rounded-lg p-3 min-h-16 whitespace-pre-wrap">${escapeHtml(patient.prescription || "Not recorded")}</dd></div>
+                    </dl>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg mb-3">Laboratory</h3>
+                    <dl class="grid sm:grid-cols-2 gap-3">
+                        <div><dt class="text-sm text-slate-500">Request</dt><dd class="border rounded-lg p-3 whitespace-pre-wrap">${escapeHtml(patient.labRequest || "Not recorded")}</dd></div>
+                        <div><dt class="text-sm text-slate-500">Result</dt><dd class="border rounded-lg p-3 whitespace-pre-wrap">${escapeHtml(patient.labResult || "Not recorded")}</dd></div>
+                    </dl>
+                </section>`;
+        }
+
+        function renderMedicalReport() {
+            const matchingPatients = getMatchingMedicalReportPatients();
+            document.getElementById("report-table").innerHTML = matchingPatients.length
+                ? matchingPatients.map(patient => `
+                    <tr class="border-t">
+                        <td class="p-3 font-bold">${String(patient.number).padStart(3, "0")}</td>
+                        <td class="p-3">${escapeHtml(patient.name)}</td>
+                        <td class="p-3">${escapeHtml(patient.age)} / ${escapeHtml(patient.gender)}</td>
+                        <td class="p-3">${escapeHtml(getMedicalReportStatus(patient))}</td>
+                        <td class="p-3">${escapeHtml(patient.diagnosis || "-")}</td>
+                        <td class="p-3">${escapeHtml(patient.labResult || patient.labRequest || "-")}</td>
+                    </tr>`).join("")
+                : '<tr><td colspan="6" class="p-6 text-center text-slate-500">No matching medical reports.</td></tr>';
+        }
+
+        function downloadMedicalReportCsv() {
+            const columns = ["Number", "Name", "Age", "Gender", "Status", "Symptoms", "Diagnosis", "Treatment", "Prescription", "Lab Request", "Lab Result"];
+            const rows = getMatchingMedicalReportPatients().map(patient => [
+                String(patient.number).padStart(3, "0"),
+                patient.name || "",
+                patient.age || "",
+                patient.gender || "",
+                getMedicalReportStatus(patient),
+                patient.symptoms || "-",
+                patient.diagnosis || "-",
+                patient.treatment || "-",
+                patient.prescription || "-",
+                patient.labRequest || "-",
+                patient.labResult || "-"
+            ]);
+            const csvCell = value => {
+                const text = String(value);
+                const safeText = /^[\t\r\n ]*[=+\-@]/.test(text) ? "'" + text : text;
+                return '"' + safeText.replace(/"/g, '""') + '"';
+            };
+            const csv = [columns, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
+            const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "medical-report-" + new Date().toISOString().slice(0, 10) + ".csv";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+
+        document.getElementById("patient-form").addEventListener("submit", event => {
+            event.preventDefault();
+            const patient = {
+                id: Date.now().toString(),
+                number: nextNumber++,
+                name: document.getElementById("patient-name").value.trim(),
+                age: document.getElementById("patient-age").value,
+                gender: document.getElementById("patient-gender").value,
+                phone: document.getElementById("patient-phone").value.trim(),
+                status: "waiting",
+                symptoms: "",
+                diagnosis: "",
+                treatment: "",
+                prescription: "",
+                labRequest: "",
+                labResult: ""
+            };
+            patients.push(patient);
+            event.target.reset();
+            save();
+        });
+
+        function callToDoctor(id) {
+            patients = patients.map(p => p.id === id ? { ...p, status: "doctor" } : p);
+            save();
+        }
+
+        function sendToLab(id) {
+            patients = patients.map(p => p.id === id ? { ...p, status: "lab" } : p);
+            save();
+        }
+
+        function completePatient(id) {
+            patients = patients.map(p => p.id === id ? { ...p, status: "completed" } : p);
+            save();
+        }
+
+        function saveClinicalNotes(id) {
+            const symptoms = document.getElementById("symptoms-" + id).value.trim();
+            const diagnosis = document.getElementById("diagnosis-" + id).value.trim();
+            const treatment = document.getElementById("treatment-" + id).value.trim();
+            const prescription = document.getElementById("prescription-" + id).value.trim();
+            patients = patients.map(p => p.id === id ? {
+                ...p,
+                symptoms,
+                diagnosis,
+                treatment,
+                prescription
+            } : p);
+            save();
+        }
+
+        function saveLabRequest(id) {
+            const input = document.getElementById("lab-request-" + id);
+            patients = patients.map(p => p.id === id ? { ...p, labRequest: input.value.trim(), status: "lab" } : p);
+            save();
+        }
+
+        function saveLabResult(id) {
+            const input = document.getElementById("lab-result-" + id);
+            patients = patients.map(p => p.id === id ? { ...p, labResult: input.value.trim(), status: "doctor" } : p);
+            save();
+        }
+
+        function patientCard(patient, actions) {
+            return `
+                <article class="border border-slate-200 rounded-xl p-4 bg-slate-50">
+                    <div class="flex justify-between items-start gap-3">
+                        <div>
+                            <div class="text-sm text-slate-500">Number ${String(patient.number).padStart(3, "0")}</div>
+                            <h3 class="text-lg font-bold">${escapeHtml(patient.name)}</h3>
+                            <p class="text-sm text-slate-600">${escapeHtml(patient.age)} years - ${escapeHtml(patient.gender)}${patient.phone ? " - " + escapeHtml(patient.phone) : ""}</p>
+                        </div>
+                        ${actions}
+                    </div>
+                </article>`;
+        }
+
+        function render() {
+            const waiting = patients.filter(p => p.status === "waiting");
+            const doctor = patients.filter(p => p.status === "doctor");
+            const lab = patients.filter(p => p.status === "lab");
+
+            document.getElementById("waiting-count").textContent = waiting.length;
+            document.getElementById("waiting-list").innerHTML = waiting.length
+                ? waiting.map(p => patientCard(p, `<button onclick="callToDoctor('${p.id}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-bold">Call</button>`)).join("")
+                : '<p class="text-slate-500 text-center py-8">No patient is waiting.</p>';
+
+            document.getElementById("doctor-list").innerHTML = waiting.length
+                ? waiting.map(p => patientCard(p, `<button onclick="callToDoctor('${p.id}')" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm">Call to Doctor</button>`)).join("")
+                : '<p class="text-slate-500 text-center py-8">No patients in the queue.</p>';
+
+            const doctorCurrent = doctor[0];
+            document.getElementById("doctor-current").innerHTML = doctorCurrent
+                ? patientCard(doctorCurrent, `<button onclick="completePatient('${doctorCurrent.id}')" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm">Complete</button>`) +
+                  `<div class="mt-4 space-y-3">
+                   <label class="block text-sm font-medium" for="symptoms-${doctorCurrent.id}">Symptoms</label>
+                   <textarea id="symptoms-${doctorCurrent.id}" class="w-full border rounded-lg p-3" rows="2">${escapeHtml(doctorCurrent.symptoms || "")}</textarea>
+                   <label class="block text-sm font-medium" for="diagnosis-${doctorCurrent.id}">Diagnosis</label>
+                   <textarea id="diagnosis-${doctorCurrent.id}" class="w-full border rounded-lg p-3" rows="2">${escapeHtml(doctorCurrent.diagnosis || "")}</textarea>
+                   <label class="block text-sm font-medium" for="treatment-${doctorCurrent.id}">Treatment</label>
+                   <textarea id="treatment-${doctorCurrent.id}" class="w-full border rounded-lg p-3" rows="2">${escapeHtml(doctorCurrent.treatment || "")}</textarea>
+                   <label class="block text-sm font-medium" for="prescription-${doctorCurrent.id}">Prescription</label>
+                   <textarea id="prescription-${doctorCurrent.id}" class="w-full border rounded-lg p-3" rows="2">${escapeHtml(doctorCurrent.prescription || "")}</textarea>
+                   <button onclick="saveClinicalNotes('${doctorCurrent.id}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save Clinical Notes</button>
+                    <label class="block text-sm font-medium" for="lab-request-${doctorCurrent.id}">Laboratory Request</label>
+                    <input id="lab-request-${doctorCurrent.id}" class="w-full border rounded-lg p-3" value="${escapeHtml(doctorCurrent.labRequest)}" placeholder="Example: CBC, Blood sugar">
+                    <button onclick="saveLabRequest('${doctorCurrent.id}')" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Send to Lab</button>
+                   </div>`
+                : '<p class="text-slate-500 text-center py-12">No patient is in the doctor room.</p>';
+
+            document.getElementById("lab-list").innerHTML = lab.length
+                ? lab.map(p => patientCard(p, "")).join("")
+                : '<p class="text-slate-500 text-center py-8">No laboratory tests are waiting.</p>';
+
+            const labCurrent = lab[0];
+            document.getElementById("lab-current").innerHTML = labCurrent
+                ? patientCard(labCurrent, "") +
+                  `<div class="mt-4 space-y-3">
+                    <p class="text-sm text-slate-600">Request: ${escapeHtml(labCurrent.labRequest || "No request provided")}</p>
+                    <label class="block text-sm font-medium" for="lab-result-${labCurrent.id}">Laboratory Result</label>
+                    <textarea id="lab-result-${labCurrent.id}" class="w-full border rounded-lg p-3" rows="4">${escapeHtml(labCurrent.labResult)}</textarea>
+                    <button onclick="saveLabResult('${labCurrent.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg">Send Back to Doctor</button>
+                   </div>`
+                : '<p class="text-slate-500 text-center py-12">No patient is in the laboratory.</p>';
+
+            document.getElementById("tv-current").textContent = doctorCurrent
+                ? String(doctorCurrent.number).padStart(3, "0") + " - " + doctorCurrent.name
+                : "No patient currently";
+            document.getElementById("tv-doctor").textContent = doctorCurrent
+                ? String(doctorCurrent.number).padStart(3, "0") + " - " + doctorCurrent.name
+                : "-";
+            document.getElementById("tv-lab").textContent = labCurrent
+                ? String(labCurrent.number).padStart(3, "0") + " - " + labCurrent.name
+                : "-";
+
+            const completed = patients.filter(p => p.status === "completed");
+            document.getElementById("report-waiting").textContent = waiting.length;
+            document.getElementById("report-doctor").textContent = doctor.length;
+            document.getElementById("report-lab").textContent = lab.length;
+            document.getElementById("report-completed").textContent = completed.length;
+            document.getElementById("report-date").textContent = new Date().toLocaleString();
+
+            document.getElementById("admin-staff-count").textContent = accounts.length;
+            document.getElementById("admin-patient-count").textContent = patients.length;
+            document.getElementById("admin-appointment-count").textContent = appointments.length;
+            document.getElementById("admin-department-count").textContent = departments.length;
+            const session = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+            document.getElementById("admin-staff-table").innerHTML = accounts.length
+                ? accounts.map(account => {
+                    const isCurrent = session && session.email.toLowerCase() === account.email.toLowerCase();
+                    const roleOptions = ["Reception", "Doctor", "Laboratory", "Administrator"].map(role =>
+                        `<option${role === account.role ? " selected" : ""}>${role}</option>`
+                    ).join("");
+                    return `<tr class="border-t">
+                        <td class="p-3">${escapeHtml(account.name)}</td>
+                        <td class="p-3">${escapeHtml(account.email)}</td>
+                        <td class="p-3"><select data-email="${escapeHtml(account.email)}" class="border rounded px-2 py-1">${roleOptions}</select></td>
+                        <td class="p-3 whitespace-nowrap">
+                            <button data-action="edit-staff" data-email="${escapeHtml(account.email)}" class="text-blue-700 hover:underline mr-2">Edit</button>
+                            <button data-action="delete-staff" data-email="${escapeHtml(account.email)}" class="text-red-700 hover:underline"${isCurrent ? " disabled title=\"You cannot remove your active account\"" : ""}>Remove</button>
+                        </td>
+                    </tr>`;
+                }).join("")
+                : '<tr><td colspan="4" class="p-6 text-center text-slate-500">No staff accounts registered.</td></tr>';
+
+            const patientOptions = patients.map(patient => ({
+                value: patient.id,
+                label: `${String(patient.number).padStart(3, "0")} - ${patient.name}`
+            }));
+            ["appointment-patient", "bill-patient", "dispense-patient"].forEach(id => {
+                const select = document.getElementById(id);
+                setSelectOptions(select, patientOptions, select.value, "Select a patient");
+            });
+            const appointmentDepartment = document.getElementById("appointment-department");
+            setSelectOptions(
+                appointmentDepartment,
+                departments.map(department => ({ value: department, label: department })),
+                appointmentDepartment.value,
+                "Select a department"
+            );
+            const dispenseMedicine = document.getElementById("dispense-medicine");
+            setSelectOptions(
+                dispenseMedicine,
+                medicines.filter(medicine => medicine.quantity > 0).map(medicine => ({
+                    value: medicine.id,
+                    label: `${medicine.name} (${medicine.quantity} in stock)`
+                })),
+                dispenseMedicine.value,
+                "Select available medicine"
+            );
+
+            document.getElementById("appointment-table").innerHTML = appointments.length
+                ? appointments.map(appointment => `<tr class="border-t">
+                    <td class="p-3">${escapeHtml(patientName(appointment))}</td>
+                    <td class="p-3">${escapeHtml(new Date(appointment.date).toLocaleString())}<p class="text-sm text-slate-500">${escapeHtml(appointment.notes || "")}</p></td>
+                    <td class="p-3">${escapeHtml(appointment.department)}</td>
+                    <td class="p-3">${escapeHtml(appointment.status)}</td>
+                    <td class="p-3 whitespace-nowrap">
+                        ${appointment.status === "Scheduled" ? `<button data-action="edit-appointment" data-id="${escapeHtml(appointment.id)}" class="text-blue-700 hover:underline mr-2">Edit</button><button data-action="complete-appointment" data-id="${escapeHtml(appointment.id)}" class="text-green-700 hover:underline mr-2">Complete</button><button data-action="cancel-appointment" data-id="${escapeHtml(appointment.id)}" class="text-orange-700 hover:underline mr-2">Cancel</button>` : ""}
+                        <button data-action="delete-appointment" data-id="${escapeHtml(appointment.id)}" class="text-red-700 hover:underline">Delete</button>
+                    </td>
+                </tr>`).join("")
+                : '<tr><td colspan="5" class="p-6 text-center text-slate-500">No appointments scheduled.</td></tr>';
+
+            document.getElementById("pharmacy-item-count").textContent = medicines.length;
+            document.getElementById("pharmacy-units-count").textContent = medicines.reduce((total, medicine) => total + Number(medicine.quantity || 0), 0);
+            document.getElementById("medicine-table").innerHTML = medicines.length
+                ? medicines.map(medicine => `<tr class="border-t">
+                    <td class="p-3">${escapeHtml(medicine.name)}</td>
+                    <td class="p-3">${medicine.quantity}</td>
+                    <td class="p-3">${formatAmount(medicine.price)}</td>
+                    <td class="p-3 whitespace-nowrap"><button data-action="edit-medicine" data-id="${escapeHtml(medicine.id)}" class="text-blue-700 hover:underline mr-2">Edit</button><button data-action="delete-medicine" data-id="${escapeHtml(medicine.id)}" class="text-red-700 hover:underline">Remove</button></td>
+                </tr>`).join("")
+                : '<tr><td colspan="4" class="p-6 text-center text-slate-500">No medicine stock recorded.</td></tr>';
+
+            const totalBilled = bills.reduce((total, bill) => total + Number(bill.amount || 0), 0);
+            const totalPaid = bills.filter(bill => bill.paid).reduce((total, bill) => total + Number(bill.amount || 0), 0);
+            document.getElementById("billing-total").textContent = formatAmount(totalBilled);
+            document.getElementById("billing-paid").textContent = formatAmount(totalPaid);
+            document.getElementById("billing-outstanding").textContent = formatAmount(totalBilled - totalPaid);
+            document.getElementById("bill-table").innerHTML = bills.length
+                ? bills.map(bill => `<tr class="border-t">
+                    <td class="p-3">${escapeHtml(patientName(bill))}</td>
+                    <td class="p-3">${escapeHtml(bill.description)}</td>
+                    <td class="p-3">${formatAmount(bill.amount)}</td>
+                    <td class="p-3">${bill.paid ? "Paid" : "Unpaid"}</td>
+                    <td class="p-3 whitespace-nowrap"><button data-action="toggle-bill" data-id="${escapeHtml(bill.id)}" class="text-blue-700 hover:underline mr-2">${bill.paid ? "Mark unpaid" : "Mark paid"}</button><button data-action="delete-bill" data-id="${escapeHtml(bill.id)}" class="text-red-700 hover:underline">Delete</button></td>
+                </tr>`).join("")
+                : '<tr><td colspan="5" class="p-6 text-center text-slate-500">No bills created.</td></tr>';
+
+            document.getElementById("department-table").innerHTML = departments.length
+                ? departments.map((department, index) => {
+                    const appointmentCount = appointments.filter(appointment => appointment.department === department).length;
+                    return `<tr class="border-t">
+                    <td class="p-3">${escapeHtml(department)}</td>
+                    <td class="p-3">${appointmentCount}</td>
+                    <td class="p-3 whitespace-nowrap"><button data-action="edit-department" data-index="${index}" class="text-blue-700 hover:underline mr-2">Edit</button><button data-action="delete-department" data-index="${index}" class="text-red-700 hover:underline"${appointmentCount ? " disabled title=\"Department has appointments\"" : ""}>Remove</button></td>
+                </tr>`;
+                }).join("")
+                : '<tr><td colspan="3" class="p-6 text-center text-slate-500">No departments available.</td></tr>';
+
+            renderPatientDirectory();
+            renderMedicalReport();
+            renderIndividualMedicalReport();
+        }
+
+        render();
+    </script>
+</body>
+</html>
